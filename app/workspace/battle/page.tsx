@@ -62,7 +62,7 @@ function PlayerModel({ action, onActionComplete }: { action: string, onActionCom
     }, [action, actions, onActionComplete]);
 
     return (
-        <group ref={group} position={[-2, -3, 0]} rotation={[0, Math.PI / 2, 0]} scale={2.5}>
+        <group ref={group} position={[-2, -1.0, 0]} rotation={[0, Math.PI / 2, 0]} scale={2.5}>
             <primitive object={scene} />
         </group>
     );
@@ -128,7 +128,7 @@ function BossModel({ action, onActionComplete }: { action: string, onActionCompl
     }, [action, actions, onActionComplete]);
 
     return (
-        <group ref={group} position={[2, -3, 0]} rotation={[0, -Math.PI / 2, 0]} scale={2.5}>
+        <group ref={group} position={[2, -1.0, 0]} rotation={[0, -Math.PI / 2, 0]} scale={2.5}>
             <primitive object={scene} />
         </group>
     );
@@ -247,7 +247,7 @@ export default function BattlePage() {
                         <BossModel action={bossAction} onActionComplete={handleBossFinished} />
                     </React.Suspense>
 
-                    <ContactShadows position={[0, -3, 0]} opacity={0.6} scale={20} blur={2} far={4} />
+                    <ContactShadows position={[0, -1.0, 0]} opacity={0.6} scale={20} blur={2} far={4} />
                     <OrbitControls
                         enablePan={false}
                         enableZoom={false}
