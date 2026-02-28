@@ -81,6 +81,7 @@ export default function WorkspaceHome() {
             const response = await fetch('/api/generate-warrior', {
                 method: 'POST',
                 body: formData,
+                credentials: 'include', // 인증 쿠키 포함
             });
 
             const data = await response.json();
@@ -117,6 +118,7 @@ export default function WorkspaceHome() {
             const response = await fetch('/api/generate-3d', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // 인증 쿠키 포함
                 body: JSON.stringify({
                     imageUrl: pipeline.warriorUrl,
                     name: pipeline.name,
@@ -154,7 +156,9 @@ export default function WorkspaceHome() {
                 if (originalUrl) url += `&originalUrl=${encodeURIComponent(originalUrl)}`;
                 if (warriorUrl) url += `&warriorUrl=${encodeURIComponent(warriorUrl)}`;
 
-                const res = await fetch(url);
+                const res = await fetch(url, {
+                    credentials: 'include' // 인증 쿠키 포함
+                });
                 const data = await res.json();
 
                 if (data.status === 'SUCCEEDED') {
