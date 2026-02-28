@@ -15,11 +15,21 @@ function PlayerModel({ action, onActionComplete }: { action: string, onActionCom
     const punchFbx = useFBX('/animations/Hook Punch.fbx');
     const kickFbx = useFBX('/animations/sideKick.fbx');
 
-    const [animations] = useState(() => [
-        Object.assign(idleFbx.animations[0].clone(), { name: 'idle' }),
-        Object.assign(punchFbx.animations[0].clone(), { name: 'punch' }),
-        Object.assign(kickFbx.animations[0].clone(), { name: 'kick' }),
-    ]);
+    const [animations] = useState(() => {
+        const processClip = (clip: THREE.AnimationClip, name: string) => {
+            const cloned = clip.clone();
+            cloned.name = name;
+            cloned.tracks.forEach(track => {
+                track.name = track.name.replace('mixamorig', '');
+            });
+            return cloned;
+        };
+        return [
+            processClip(idleFbx.animations[0], 'idle'),
+            processClip(punchFbx.animations[0], 'punch'),
+            processClip(kickFbx.animations[0], 'kick'),
+        ];
+    });
 
     const { actions } = useAnimations(animations, group);
 
@@ -68,11 +78,21 @@ function BossModel({ action, onActionComplete }: { action: string, onActionCompl
     const hitFbx = useFBX('/animations/Hit.fbx');
     const koFbx = useFBX('/animations/KO.fbx');
 
-    const [animations] = useState(() => [
-        Object.assign(idleFbx.animations[0].clone(), { name: 'idle' }),
-        Object.assign(hitFbx.animations[0].clone(), { name: 'hit' }),
-        Object.assign(koFbx.animations[0].clone(), { name: 'ko' }),
-    ]);
+    const [animations] = useState(() => {
+        const processClip = (clip: THREE.AnimationClip, name: string) => {
+            const cloned = clip.clone();
+            cloned.name = name;
+            cloned.tracks.forEach(track => {
+                track.name = track.name.replace('mixamorig', '');
+            });
+            return cloned;
+        };
+        return [
+            processClip(idleFbx.animations[0], 'idle'),
+            processClip(hitFbx.animations[0], 'hit'),
+            processClip(koFbx.animations[0], 'ko'),
+        ];
+    });
 
     const { actions } = useAnimations(animations, group);
 

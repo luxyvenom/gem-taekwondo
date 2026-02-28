@@ -58,16 +58,28 @@ function CharacterModel({ action }: { action: string }) {
   const pushKickFbx = useFBX('/animations/pushKicking.fbx');
   const turnKickFbx = useFBX('/animations/turnkick.fbx');
 
-  const [animations] = useState(() => [
-    Object.assign(idleFbx.animations[0].clone(), { name: 'idle' }),
-    Object.assign(punchFbx.animations[0].clone(), { name: 'punch' }),
-    Object.assign(sideKickFbx.animations[0].clone(), { name: 'sideKick' }),
-    Object.assign(hurricaneKickFbx.animations[0].clone(), { name: 'hurricaneKick' }),
-    Object.assign(jumpKickFbx.animations[0].clone(), { name: 'jumpKick' }),
-    Object.assign(blockFbx.animations[0].clone(), { name: 'block' }),
-    Object.assign(pushKickFbx.animations[0].clone(), { name: 'pushKick' }),
-    Object.assign(turnKickFbx.animations[0].clone(), { name: 'turnKick' }),
-  ]);
+  const [animations] = useState(() => {
+    const processClip = (clip: THREE.AnimationClip, name: string) => {
+      const cloned = clip.clone();
+      cloned.name = name;
+      cloned.tracks.forEach(track => {
+        // Meshy AI 모델의 뼈대 이름과 맞추기 위해 믹사모 접두사 제거
+        track.name = track.name.replace('mixamorig', '');
+      });
+      return cloned;
+    };
+
+    return [
+      processClip(idleFbx.animations[0], 'idle'),
+      processClip(punchFbx.animations[0], 'punch'),
+      processClip(sideKickFbx.animations[0], 'sideKick'),
+      processClip(hurricaneKickFbx.animations[0], 'hurricaneKick'),
+      processClip(jumpKickFbx.animations[0], 'jumpKick'),
+      processClip(blockFbx.animations[0], 'block'),
+      processClip(pushKickFbx.animations[0], 'pushKick'),
+      processClip(turnKickFbx.animations[0], 'turnKick'),
+    ];
+  });
 
   const { actions } = useAnimations(animations, group);
 
