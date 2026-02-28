@@ -1,0 +1,231 @@
+'use client';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Fighter {
+  id: string;
+  name: string;
+  animal: string;
+  emoji: string;
+  tier: 'S' | 'A' | 'B' | 'C';
+  level: number;
+  hp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  wins: number;
+  losses: number;
+}
+
+const mockFighters: Fighter[] = [
+  { id: '1', name: 'Frog Master', animal: 'Frog', emoji: '🐸', tier: 'S', level: 15, hp: 120, attack: 85, defense: 60, speed: 90, wins: 12, losses: 2 },
+  { id: '2', name: 'Tiger Claw', animal: 'Tiger', emoji: '🐯', tier: 'A', level: 10, hp: 150, attack: 95, defense: 70, speed: 65, wins: 8, losses: 4 },
+  { id: '3', name: 'Eagle Strike', animal: 'Eagle', emoji: '🦅', tier: 'A', level: 8, hp: 90, attack: 80, defense: 45, speed: 95, wins: 6, losses: 3 },
+  { id: '4', name: 'Bear Force', animal: 'Bear', emoji: '🐻', tier: 'B', level: 5, hp: 200, attack: 90, defense: 85, speed: 30, wins: 3, losses: 5 },
+  { id: '5', name: 'Snake Venom', animal: 'Snake', emoji: '🐍', tier: 'B', level: 7, hp: 80, attack: 75, defense: 40, speed: 88, wins: 5, losses: 6 },
+  { id: '6', name: 'Wolf Pack', animal: 'Wolf', emoji: '🐺', tier: 'C', level: 3, hp: 110, attack: 70, defense: 55, speed: 75, wins: 2, losses: 7 },
+];
+
+const tierColors: Record<string, string> = {
+  S: 'from-yellow-400 to-orange-500 text-black',
+  A: 'from-purple-500 to-pink-500 text-white',
+  B: 'from-blue-500 to-cyan-500 text-white',
+  C: 'from-gray-500 to-gray-600 text-white',
+};
+
+const tierBorder: Record<string, string> = {
+  S: 'border-yellow-500/50 shadow-yellow-500/20',
+  A: 'border-purple-500/50 shadow-purple-500/20',
+  B: 'border-blue-500/50 shadow-blue-500/20',
+  C: 'border-gray-600/50 shadow-gray-500/20',
+};
+
+export default function CollectionPage() {
+  const [fighters] = useState<Fighter[]>(mockFighters);
+  const [selectedFighter, setSelectedFighter] = useState<Fighter | null>(null);
+  const [filterTier, setFilterTier] = useState<string>('ALL');
+
+  const filteredFighters = filterTier === 'ALL'
+    ? fighters
+    : fighters.filter(f => f.tier === filterTier);
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="mb-8 flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-4xl font-black italic text-white tracking-tight">
+            FIGHTER <span className="text-red-500">COLLECTION</span>
+          </h1>
+          <p className="text-gray-400 mt-2">
+            {fighters.length} fighters in your roster
+          </p>
+        </div>
+        {/* Tier Filter */}
+        <div className="flex gap-2">
+          {['ALL', 'S', 'A', 'B', 'C'].map((tier) => (
+            <button
+              key={tier}
+              onClick={() => setFilterTier(tier)}
+              className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
+                filterTier === tier
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              {tier}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Fighter Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredFighters.map((fighter, index) => (
+          <motion.div
+            key={fighter.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.08 }}
+            onClick={() => setSelectedFighter(fighter)}
+            className={`bg-[#1a1a1a] border rounded-xl overflow-hidden cursor-pointer group hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl ${tierBorder[fighter.tier]}`}
+          >
+            {/* Fighter Avatar */}
+            <div className="relative h-40 bg-gradient-to-br from-[#1a1a1a] to-[#222] flex items-center justify-center overflow-hidden">
+              <span className="text-7xl group-hover:scale-125 transition-transform duration-500">
+                {fighter.emoji}
+              </span>
+              {/* Tier Badge */}
+              <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg font-black italic text-sm bg-gradient-to-r ${tierColors[fighter.tier]} shadow-[2px_2px_0px_rgba(0,0,0,0.5)]`}>
+                {fighter.tier}
+              </div>
+              {/* Level */}
+              <div className="absolute top-3 right-3 bg-black/60 px-2 py-1 rounded-lg text-xs font-bold text-gray-300">
+                LV.{fighter.level}
+              </div>
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent" />
+            </div>
+
+            {/* Info */}
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-white text-lg">{fighter.name}</h3>
+                <span className="text-gray-500 text-xs">{fighter.animal}</span>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-4 gap-2 text-center">
+                {[
+                  { label: 'HP', value: fighter.hp, color: 'text-green-400' },
+                  { label: 'ATK', value: fighter.attack, color: 'text-red-400' },
+                  { label: 'DEF', value: fighter.defense, color: 'text-blue-400' },
+                  { label: 'SPD', value: fighter.speed, color: 'text-yellow-400' },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-black/30 rounded-lg py-1.5">
+                    <div className={`text-xs font-bold ${stat.color}`}>{stat.label}</div>
+                    <div className="text-white font-bold text-sm">{stat.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Win/Loss */}
+              <div className="mt-3 flex items-center justify-between text-xs">
+                <span className="text-green-400 font-bold">{fighter.wins}W</span>
+                <div className="flex-1 mx-3 h-1 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-500 to-red-500 rounded-full"
+                    style={{ width: `${(fighter.wins / (fighter.wins + fighter.losses)) * 100}%` }}
+                  />
+                </div>
+                <span className="text-red-400 font-bold">{fighter.losses}L</span>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Fighter Detail Modal */}
+      <AnimatePresence>
+        {selectedFighter && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onClick={() => setSelectedFighter(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 50 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-[#1a1a1a] border rounded-2xl max-w-md w-full overflow-hidden shadow-2xl ${tierBorder[selectedFighter.tier]}`}
+            >
+              {/* Modal Header */}
+              <div className="relative h-48 bg-gradient-to-br from-[#1a1a1a] to-[#222] flex items-center justify-center">
+                <span className="text-[100px]">{selectedFighter.emoji}</span>
+                <div className={`absolute top-4 left-4 px-4 py-1.5 rounded-lg font-black italic bg-gradient-to-r ${tierColors[selectedFighter.tier]} shadow-[3px_3px_0px_rgba(0,0,0,0.5)]`}>
+                  TIER {selectedFighter.tier}
+                </div>
+                <button
+                  onClick={() => setSelectedFighter(null)}
+                  className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-red-600 rounded-xl flex items-center justify-center transition-colors text-lg"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-6">
+                <h2 className="text-2xl font-black italic text-white">{selectedFighter.name}</h2>
+                <p className="text-gray-500 text-sm mb-4">Level {selectedFighter.level} • {selectedFighter.animal} Fighter</p>
+
+                {/* Detailed Stats */}
+                <div className="space-y-3">
+                  {[
+                    { label: 'HP', value: selectedFighter.hp, max: 200, color: 'bg-green-500' },
+                    { label: 'ATTACK', value: selectedFighter.attack, max: 100, color: 'bg-red-500' },
+                    { label: 'DEFENSE', value: selectedFighter.defense, max: 100, color: 'bg-blue-500' },
+                    { label: 'SPEED', value: selectedFighter.speed, max: 100, color: 'bg-yellow-500' },
+                  ].map((stat) => (
+                    <div key={stat.label}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-400 font-bold">{stat.label}</span>
+                        <span className="text-white font-bold">{stat.value}</span>
+                      </div>
+                      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stat.value / stat.max) * 100}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                          className={`h-full ${stat.color} rounded-full`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Record */}
+                <div className="mt-5 flex gap-3">
+                  <div className="flex-1 bg-green-900/20 border border-green-900/30 rounded-xl p-3 text-center">
+                    <div className="text-green-400 text-2xl font-black">{selectedFighter.wins}</div>
+                    <div className="text-green-400/60 text-xs font-bold">WINS</div>
+                  </div>
+                  <div className="flex-1 bg-red-900/20 border border-red-900/30 rounded-xl p-3 text-center">
+                    <div className="text-red-400 text-2xl font-black">{selectedFighter.losses}</div>
+                    <div className="text-red-400/60 text-xs font-bold">LOSSES</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

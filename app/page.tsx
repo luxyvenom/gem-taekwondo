@@ -1,3 +1,9 @@
+import { HeroSection } from '@/components/hero-odyssey';
+
 export default function Home() {
-  return <main>Gemtae</main>;
+  return (
+    <main>
+      <HeroSection />
+    </main>
+  );
 }
