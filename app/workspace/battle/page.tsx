@@ -193,7 +193,7 @@ export default function BattlePage() {
     };
 
     return (
-        <div className="relative w-full h-[calc(100vh-4rem)] bg-[#0a0a0a] overflow-hidden flex flex-col">
+        <div className="relative w-full h-[calc(100vh-4rem)] bg-[#0a0a0a] overflow-hidden">
 
             {/* ─── HUD / UI ─── */}
             <div className="absolute top-0 inset-x-0 z-10 p-6 flex justify-between items-start pointer-events-none">
@@ -235,7 +235,7 @@ export default function BattlePage() {
             </div>
 
             {/* ─── 3D Canvas ─── */}
-            <div className="flex-1 w-full bg-gradient-to-b from-gray-900 via-[#111] to-[#050505] relative cursor-default">
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-[#111] to-[#050505] cursor-default z-0">
                 <Canvas camera={{ position: [0, 2, 8], fov: 50 }}>
                     <ambientLight intensity={0.5} />
                     <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
@@ -257,30 +257,9 @@ export default function BattlePage() {
                 </Canvas>
             </div>
 
-            {/* ─── Controls & Logs ─── */}
-            <div className="h-64 bg-[#111] border-t-2 border-red-900/50 flex flex-col p-6 gap-4 relative z-10 shrink-0">
-                {/* Battle Logs */}
-                <div className="flex-1 bg-black/50 rounded-xl border border-gray-800 p-4 font-mono text-sm overflow-hidden flex flex-col justify-end">
-                    <AnimatePresence>
-                        {battleLog.map((log, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className={`mb-1
-                                    ${log.type === 'system' ? 'text-gray-400' : ''}
-                                    ${log.type === 'player' ? 'text-blue-400 font-bold' : ''}
-                                    ${log.type === 'critical' ? 'text-red-500 font-black tracking-wide' : ''}
-                                `}
-                            >
-                                {log.text}
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </div>
-
-                {/* Action Buttons - Horizontal Layout */}
-                <div className="flex gap-4 justify-center w-full max-w-4xl mx-auto h-20">
+            {/* ─── Controls ─── */}
+            <div className="absolute bottom-12 inset-x-0 z-10 pointer-events-none flex justify-center px-4">
+                <div className="flex gap-4 justify-center w-full max-w-4xl h-20 pointer-events-auto">
                     <button
                         onClick={() => doAttack('punch')}
                         disabled={playerAction !== 'idle' || bossHp <= 0}
