@@ -1,19 +1,72 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF, useFBX, useAnimations, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
+
+// ─── Attack definitions ──────────────────────────────────────
+interface AttackDef {
+    key: string;
+    label: string;
+    emoji: string;
+    damage: number;
+    colorFrom: string;
+    colorTo: string;
+    hoverFrom: string;
+    hoverTo: string;
+    shadow: string;
+    hoverShadow: string;
+}
+
+const ATTACKS: AttackDef[] = [
+    { key: 'punch', label: 'PUNCH', emoji: '👊', damage: 10, colorFrom: 'from-blue-700', colorTo: 'to-indigo-600', hoverFrom: 'hover:from-blue-600', hoverTo: 'hover:to-indigo-500', shadow: 'shadow-[0_0_12px_rgba(79,70,229,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(79,70,229,0.8)]' },
+    { key: 'block', label: 'BLOCK', emoji: '🛡️', damage: 0, colorFrom: 'from-gray-600', colorTo: 'to-gray-500', hoverFrom: 'hover:from-gray-500', hoverTo: 'hover:to-gray-400', shadow: 'shadow-[0_0_12px_rgba(107,114,128,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(107,114,128,0.8)]' },
+    { key: 'pushKick', label: 'PUSH KICK', emoji: '🦵', damage: 12, colorFrom: 'from-orange-600', colorTo: 'to-amber-500', hoverFrom: 'hover:from-orange-500', hoverTo: 'hover:to-amber-400', shadow: 'shadow-[0_0_12px_rgba(234,88,12,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(234,88,12,0.8)]' },
+    { key: 'sideKick', label: 'SIDE KICK', emoji: '🦶', damage: 15, colorFrom: 'from-red-700', colorTo: 'to-red-500', hoverFrom: 'hover:from-red-600', hoverTo: 'hover:to-red-400', shadow: 'shadow-[0_0_12px_rgba(220,38,38,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(220,38,38,0.8)]' },
+    { key: 'turnKick', label: 'TURN KICK', emoji: '🌪️', damage: 18, colorFrom: 'from-yellow-600', colorTo: 'to-yellow-400', hoverFrom: 'hover:from-yellow-500', hoverTo: 'hover:to-yellow-300', shadow: 'shadow-[0_0_12px_rgba(202,138,4,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(202,138,4,0.8)]' },
+    { key: 'jumpKick', label: 'JUMP KICK', emoji: '🚀', damage: 20, colorFrom: 'from-purple-700', colorTo: 'to-purple-500', hoverFrom: 'hover:from-purple-600', hoverTo: 'hover:to-purple-400', shadow: 'shadow-[0_0_12px_rgba(126,34,206,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(126,34,206,0.8)]' },
+    { key: 'hurricaneKick', label: 'HURRICANE', emoji: '⚡', damage: 30, colorFrom: 'from-red-600', colorTo: 'to-yellow-500', hoverFrom: 'hover:from-red-500', hoverTo: 'hover:to-yellow-400', shadow: 'shadow-[0_0_12px_rgba(239,68,68,0.5)]', hoverShadow: 'hover:shadow-[0_0_20px_rgba(239,68,68,0.8)]' },
+];
+
+// ─── Apply color material to white/untextured meshes ─────────
+function applyColorToModel(scene: THREE.Object3D, color: string) {
+    scene.traverse((child: any) => {
+        if (child.isMesh || child.isSkinnedMesh) {
+            const mesh = child as THREE.Mesh;
+            const mat = mesh.material as THREE.MeshStandardMaterial;
+            // Check if the material is effectively white/untextured
+            if (mat && !mat.map) {
+                mesh.material = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(color),
+                    roughness: 0.5,
+                    metalness: 0.1,
+                    skinning: true,
+                } as any);
+            }
+        }
+    });
+}
 
 // ─── 3D Player Component ─────────────────────────────────────
 function PlayerModel({ action, onActionComplete }: { action: string, onActionComplete: () => void }) {
     const group = useRef<THREE.Group>(null);
     const { scene } = useGLTF('/my/my.glb');
 
+    // Apply player color (blue-ish fighter)
+    useEffect(() => {
+        applyColorToModel(scene, '#3b82f6');
+    }, [scene]);
+
     const idleFbx = useFBX('/animations/Ready Idle.fbx');
     const punchFbx = useFBX('/animations/Hook Punch.fbx');
-    const kickFbx = useFBX('/animations/sideKick.fbx');
+    const sideKickFbx = useFBX('/animations/sideKick.fbx');
+    const hurricaneKickFbx = useFBX('/animations/Hurricane Kick.fbx');
+    const jumpKickFbx = useFBX('/animations/leftjumpKicking.fbx');
+    const blockFbx = useFBX('/animations/Outward Block.fbx');
+    const pushKickFbx = useFBX('/animations/pushKicking.fbx');
+    const turnKickFbx = useFBX('/animations/turnkick.fbx');
 
     const [animations] = useState(() => {
         const processClip = (clip: THREE.AnimationClip, name: string) => {
@@ -27,7 +80,12 @@ function PlayerModel({ action, onActionComplete }: { action: string, onActionCom
         return [
             processClip(idleFbx.animations[0], 'idle'),
             processClip(punchFbx.animations[0], 'punch'),
-            processClip(kickFbx.animations[0], 'kick'),
+            processClip(sideKickFbx.animations[0], 'sideKick'),
+            processClip(hurricaneKickFbx.animations[0], 'hurricaneKick'),
+            processClip(jumpKickFbx.animations[0], 'jumpKick'),
+            processClip(blockFbx.animations[0], 'block'),
+            processClip(pushKickFbx.animations[0], 'pushKick'),
+            processClip(turnKickFbx.animations[0], 'turnKick'),
         ];
     });
 
@@ -71,8 +129,12 @@ function PlayerModel({ action, onActionComplete }: { action: string, onActionCom
 // ─── 3D Boss Component ───────────────────────────────────────
 function BossModel({ action, onActionComplete }: { action: string, onActionComplete: () => void }) {
     const group = useRef<THREE.Group>(null);
-    // Clone scene to avoid shared materials issue if we eventually add more bosses, but here we just need one boss scene
     const { scene } = useGLTF('/boss/frogboss.glb');
+
+    // Apply boss color (green frog boss)
+    useEffect(() => {
+        applyColorToModel(scene, '#22c55e');
+    }, [scene]);
 
     const idleFbx = useFBX('/animations/Ready Idle.fbx');
     const hitFbx = useFBX('/animations/Hit.fbx');
@@ -140,6 +202,11 @@ useGLTF.preload('/boss/frogboss.glb');
 useFBX.preload('/animations/Ready Idle.fbx');
 useFBX.preload('/animations/Hook Punch.fbx');
 useFBX.preload('/animations/sideKick.fbx');
+useFBX.preload('/animations/Hurricane Kick.fbx');
+useFBX.preload('/animations/leftjumpKicking.fbx');
+useFBX.preload('/animations/Outward Block.fbx');
+useFBX.preload('/animations/pushKicking.fbx');
+useFBX.preload('/animations/turnkick.fbx');
 useFBX.preload('/animations/Hit.fbx');
 useFBX.preload('/animations/KO.fbx');
 
@@ -150,26 +217,33 @@ export default function BattlePage() {
 
     const [playerHp, setPlayerHp] = useState(100);
     const [bossHp, setBossHp] = useState(100);
-    const [battleActive, setBattleActive] = useState(false);
     const [battleLog, setBattleLog] = useState<{ text: string, type: string }[]>([]);
+    const [lastHit, setLastHit] = useState<string | null>(null);
 
     useEffect(() => {
-        // Init battle text
-        setBattleLog([{ text: "🥊 Ready for final demo battle!", type: "system" }]);
+        setBattleLog([{ text: "🥊 Ready for battle!", type: "system" }]);
     }, []);
 
-    const doAttack = (type: 'punch' | 'kick') => {
+    const doAttack = useCallback((attackKey: string) => {
         if (playerAction !== 'idle' || bossAction === 'ko') return;
 
-        // Start player attack
-        setPlayerAction(type);
-        setBattleLog(prev => [{ text: `🔥 You used ${type.toUpperCase()}!`, type: 'player' }, ...prev].slice(0, 5));
+        const attack = ATTACKS.find(a => a.key === attackKey);
+        if (!attack) return;
 
-        // Let the animation play slightly before Boss reacts
+        // Start player attack animation
+        setPlayerAction(attackKey);
+        setLastHit(attackKey);
+        setBattleLog(prev => [{ text: `🔥 ${attack.emoji} ${attack.label}!`, type: 'player' }, ...prev].slice(0, 5));
+
+        if (attack.damage === 0) {
+            // Block: no damage to boss, just play animation
+            return;
+        }
+
+        // Boss reacts after a short delay
         setTimeout(() => {
             if (bossHp <= 0) return;
-            const dmg = type === 'punch' ? 15 : 25;
-            const newHp = Math.max(bossHp - dmg, 0);
+            const newHp = Math.max(bossHp - attack.damage, 0);
 
             setBossHp(newHp);
 
@@ -178,19 +252,29 @@ export default function BattlePage() {
                 setBattleLog(prev => [{ text: `🏆 BOSS DEFEATED!`, type: 'critical' }, ...prev].slice(0, 5));
             } else {
                 setBossAction('hit');
+                setBattleLog(prev => [{ text: `💥 -${attack.damage} DMG!`, type: 'damage' }, ...prev].slice(0, 5));
             }
-        }, 500); // 500ms delay to sync impact roughly
-    };
+        }, 500);
+    }, [playerAction, bossAction, bossHp]);
 
-    const handlePlayerFinished = () => {
+    const handlePlayerFinished = useCallback(() => {
         setPlayerAction('idle');
-    };
+    }, []);
 
-    const handleBossFinished = () => {
+    const handleBossFinished = useCallback(() => {
         if (bossAction !== 'ko') {
             setBossAction('idle');
         }
-    };
+    }, [bossAction]);
+
+    const resetBattle = useCallback(() => {
+        setPlayerAction('idle');
+        setBossAction('idle');
+        setPlayerHp(100);
+        setBossHp(100);
+        setLastHit(null);
+        setBattleLog([{ text: "🥊 New battle started!", type: "system" }]);
+    }, []);
 
     return (
         <div className="relative w-full h-[calc(100vh-4rem)] bg-[#0a0a0a] overflow-hidden">
@@ -221,7 +305,7 @@ export default function BattlePage() {
                 <div className="w-1/3">
                     <div className="flex justify-between text-white font-bold mb-1">
                         <span className="text-orange-400">{bossHp} HP</span>
-                        <span className="text-xl italic">DRAGON EMPEROR</span>
+                        <span className="text-xl italic">FROG BOSS</span>
                     </div>
                     <div className="h-4 bg-gray-900 rounded-full border-2 border-gray-700 overflow-hidden shadow-lg shadow-orange-900/20 flex justify-end">
                         <motion.div
@@ -232,6 +316,28 @@ export default function BattlePage() {
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* ─── Battle Log ─── */}
+            <div className="absolute top-24 left-6 z-10 pointer-events-none">
+                <AnimatePresence>
+                    {battleLog.slice(0, 3).map((log, i) => (
+                        <motion.div
+                            key={`${log.text}-${i}`}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1 - i * 0.3, x: 0 }}
+                            exit={{ opacity: 0 }}
+                            className={`text-sm font-bold mb-1 ${
+                                log.type === 'critical' ? 'text-yellow-400 text-lg' :
+                                log.type === 'damage' ? 'text-red-400' :
+                                log.type === 'player' ? 'text-blue-300' :
+                                'text-gray-400'
+                            }`}
+                        >
+                            {log.text}
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
 
             {/* ─── 3D Canvas ─── */}
@@ -257,23 +363,49 @@ export default function BattlePage() {
                 </Canvas>
             </div>
 
-            {/* ─── Controls ─── */}
-            <div className="absolute bottom-12 inset-x-0 z-10 pointer-events-none flex justify-center px-4">
-                <div className="flex gap-4 justify-center w-full max-w-4xl h-20 pointer-events-auto">
-                    <button
-                        onClick={() => doAttack('punch')}
-                        disabled={playerAction !== 'idle' || bossHp <= 0}
-                        className="flex-1 max-w-[300px] h-full bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-black text-2xl italic rounded-xl transition-all shadow-[0_0_15px_rgba(79,70,229,0.5)] hover:shadow-[0_0_25px_rgba(79,70,229,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
+            {/* ─── Damage Popup ─── */}
+            <AnimatePresence>
+                {lastHit && (
+                    <motion.div
+                        key={lastHit + Date.now()}
+                        initial={{ opacity: 1, y: 0, scale: 1.5 }}
+                        animate={{ opacity: 0, y: -60, scale: 0.8 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="absolute top-1/3 left-1/2 -translate-x-1/2 z-20 text-4xl font-black italic text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.8)] pointer-events-none"
                     >
-                        <span>👊</span> LIGHT PUNCH
-                    </button>
-                    <button
-                        onClick={() => doAttack('kick')}
-                        disabled={playerAction !== 'idle' || bossHp <= 0}
-                        className="flex-1 max-w-[300px] h-full bg-gradient-to-r from-red-700 to-orange-600 hover:from-red-600 hover:to-orange-500 text-white font-black text-2xl italic rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] hover:shadow-[0_0_25px_rgba(220,38,38,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
-                    >
-                        <span>🦶</span> HEAVY KICK
-                    </button>
+                        {ATTACKS.find(a => a.key === lastHit)?.emoji} {ATTACKS.find(a => a.key === lastHit)?.damage || 'BLOCK'}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ─── Action Buttons ─── */}
+            <div className="absolute bottom-6 inset-x-0 z-10 pointer-events-none flex justify-center px-4">
+                <div className="flex flex-wrap gap-2 justify-center w-full max-w-5xl pointer-events-auto">
+                    {ATTACKS.map((attack) => (
+                        <button
+                            key={attack.key}
+                            onClick={() => doAttack(attack.key)}
+                            disabled={playerAction !== 'idle' || bossHp <= 0}
+                            className={`px-4 py-3 bg-gradient-to-r ${attack.colorFrom} ${attack.colorTo} ${attack.hoverFrom} ${attack.hoverTo} text-white font-black text-sm italic rounded-xl transition-all ${attack.shadow} ${attack.hoverShadow} disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 ${
+                                attack.key === 'hurricaneKick' ? 'col-span-2 px-6' : ''
+                            }`}
+                        >
+                            <span>{attack.emoji}</span> {attack.label}
+                        </button>
+                    ))}
+
+                    {/* Reset button when boss is KO */}
+                    {bossHp <= 0 && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            onClick={resetBattle}
+                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-black text-sm italic rounded-xl transition-all shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:shadow-[0_0_25px_rgba(34,197,94,0.8)] transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2"
+                        >
+                            🔄 REMATCH
+                        </motion.button>
+                    )}
                 </div>
             </div>
         </div>

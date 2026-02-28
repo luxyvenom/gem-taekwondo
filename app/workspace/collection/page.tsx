@@ -39,10 +39,33 @@ const tierBorder: Record<string, string> = {
   C: 'border-gray-600/50 shadow-gray-500/20',
 };
 
+// ─── Apply color material to white/untextured meshes ─────────
+function applyColorToModel(scene: THREE.Object3D, color: string) {
+  scene.traverse((child: any) => {
+    if (child.isMesh || child.isSkinnedMesh) {
+      const mesh = child as THREE.Mesh;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (mat && !mat.map) {
+        mesh.material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(color),
+          roughness: 0.5,
+          metalness: 0.1,
+          skinning: true,
+        } as any);
+      }
+    }
+  });
+}
+
 // ─── 3D Character Viewer Component ─────────────────────────────────────
 function CharacterModel({ action }: { action: string }) {
   const group = useRef<THREE.Group>(null);
-  const { scene } = useGLTF('/my/my.glb'); // Using a placeholder user character
+  const { scene } = useGLTF('/my/my.glb');
+
+  // Apply player color (blue fighter)
+  useEffect(() => {
+    applyColorToModel(scene, '#3b82f6');
+  }, [scene]);
 
   const idleFbx = useFBX('/animations/Ready Idle.fbx');
   const punchFbx = useFBX('/animations/Hook Punch.fbx');
