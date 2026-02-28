@@ -51,12 +51,22 @@ function CharacterModel({ action }: { action: string }) {
 
   const idleFbx = useFBX('/animations/Ready Idle.fbx');
   const punchFbx = useFBX('/animations/Hook Punch.fbx');
-  const kickFbx = useFBX('/animations/sideKick.fbx');
+  const sideKickFbx = useFBX('/animations/sideKick.fbx');
+  const hurricaneKickFbx = useFBX('/animations/Hurricane Kick.fbx');
+  const jumpKickFbx = useFBX('/animations/leftjumpKicking.fbx');
+  const blockFbx = useFBX('/animations/Outward Block.fbx');
+  const pushKickFbx = useFBX('/animations/pushKicking.fbx');
+  const turnKickFbx = useFBX('/animations/turnkick.fbx');
 
   const [animations] = useState(() => [
     Object.assign(idleFbx.animations[0].clone(), { name: 'idle' }),
     Object.assign(punchFbx.animations[0].clone(), { name: 'punch' }),
-    Object.assign(kickFbx.animations[0].clone(), { name: 'kick' }),
+    Object.assign(sideKickFbx.animations[0].clone(), { name: 'sideKick' }),
+    Object.assign(hurricaneKickFbx.animations[0].clone(), { name: 'hurricaneKick' }),
+    Object.assign(jumpKickFbx.animations[0].clone(), { name: 'jumpKick' }),
+    Object.assign(blockFbx.animations[0].clone(), { name: 'block' }),
+    Object.assign(pushKickFbx.animations[0].clone(), { name: 'pushKick' }),
+    Object.assign(turnKickFbx.animations[0].clone(), { name: 'turnKick' }),
   ]);
 
   const { actions } = useAnimations(animations, group);
@@ -88,6 +98,11 @@ useGLTF.preload('/my/my.glb');
 useFBX.preload('/animations/Ready Idle.fbx');
 useFBX.preload('/animations/Hook Punch.fbx');
 useFBX.preload('/animations/sideKick.fbx');
+useFBX.preload('/animations/Hurricane Kick.fbx');
+useFBX.preload('/animations/leftjumpKicking.fbx');
+useFBX.preload('/animations/Outward Block.fbx');
+useFBX.preload('/animations/pushKicking.fbx');
+useFBX.preload('/animations/turnkick.fbx');
 
 export default function CollectionPage() {
   const [fighters] = useState<Fighter[]>(mockFighters);
@@ -122,8 +137,8 @@ export default function CollectionPage() {
               key={tier}
               onClick={() => setFilterTier(tier)}
               className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${filterTier === tier
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
             >
               {tier}
@@ -246,18 +261,48 @@ export default function CollectionPage() {
                 </button>
 
                 {/* 3D Actions */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                <div className="absolute bottom-4 left-0 right-0 px-2 flex flex-wrap justify-center gap-1.5 z-10 w-full mb-1">
                   <button
-                    onClick={() => { setCurrentAction('punch'); setTimeout(() => setCurrentAction('idle'), 1200) }}
-                    className="px-4 py-2 bg-blue-600/80 hover:bg-blue-500 backdrop-blur text-white text-xs font-bold rounded-lg transition-all"
+                    onClick={() => { setCurrentAction('punch'); setTimeout(() => setCurrentAction('idle'), 1300) }}
+                    className="px-2 py-1.5 bg-blue-600/80 hover:bg-blue-500 backdrop-blur text-white text-[10px] font-bold rounded-lg transition-all"
                   >
                     👊 PUNCH
                   </button>
                   <button
-                    onClick={() => { setCurrentAction('kick'); setTimeout(() => setCurrentAction('idle'), 1500) }}
-                    className="px-4 py-2 bg-red-600/80 hover:bg-red-500 backdrop-blur text-white text-xs font-bold rounded-lg transition-all"
+                    onClick={() => { setCurrentAction('block'); setTimeout(() => setCurrentAction('idle'), 1300) }}
+                    className="px-2 py-1.5 bg-gray-600/80 hover:bg-gray-500 backdrop-blur text-white text-[10px] font-bold rounded-lg transition-all"
                   >
-                    🦶 KICK
+                    🛡️ BLOCK
+                  </button>
+                  <button
+                    onClick={() => { setCurrentAction('pushKick'); setTimeout(() => setCurrentAction('idle'), 1300) }}
+                    className="px-2 py-1.5 bg-orange-600/80 hover:bg-orange-500 backdrop-blur text-white text-[10px] font-bold rounded-lg transition-all"
+                  >
+                    🦵 PUSH KICK
+                  </button>
+                  <button
+                    onClick={() => { setCurrentAction('sideKick'); setTimeout(() => setCurrentAction('idle'), 1500) }}
+                    className="px-2 py-1.5 bg-red-600/80 hover:bg-red-500 backdrop-blur text-white text-[10px] font-bold rounded-lg transition-all"
+                  >
+                    🦶 SIDE KICK
+                  </button>
+                  <button
+                    onClick={() => { setCurrentAction('turnKick'); setTimeout(() => setCurrentAction('idle'), 1600) }}
+                    className="px-2 py-1.5 bg-yellow-600/80 hover:bg-yellow-500 backdrop-blur text-white text-[10px] font-bold rounded-lg transition-all"
+                  >
+                    🌪️ TURN KICK
+                  </button>
+                  <button
+                    onClick={() => { setCurrentAction('jumpKick'); setTimeout(() => setCurrentAction('idle'), 1600) }}
+                    className="px-2 py-1.5 bg-purple-600/80 hover:bg-purple-500 backdrop-blur text-white text-[10px] font-bold rounded-lg transition-all"
+                  >
+                    🚀 JUMP KICK
+                  </button>
+                  <button
+                    onClick={() => { setCurrentAction('hurricaneKick'); setTimeout(() => setCurrentAction('idle'), 2500) }}
+                    className="px-2 py-1.5 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-500 hover:to-yellow-400 backdrop-blur text-white text-[10px] font-black rounded-lg transition-all shadow-lg shadow-red-500/30 w-[80%] max-w-[200px]"
+                  >
+                    ⚡ HURRICANE KICK
                   </button>
                 </div>
               </div>
