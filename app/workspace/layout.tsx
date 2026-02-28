@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase';
 
 const navItems = [
     { id: 'home', label: 'HOME', icon: '🏠', description: 'Upload Image', path: '/workspace' },
@@ -23,6 +24,12 @@ export default function WorkspaceLayout({
     const isActive = (path: string) => {
         if (path === '/workspace') return pathname === '/workspace';
         return pathname.startsWith(path);
+    };
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        window.location.href = 'https://gem-taekwondo.vercel.app';
     };
 
     return (
@@ -83,6 +90,19 @@ export default function WorkspaceLayout({
                         </button>
                     ))}
                 </nav>
+
+                {/* Logout Button */}
+                <button
+                    onClick={handleLogout}
+                    className="mx-3 mb-2 flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-red-600/10 hover:text-red-400 transition-all duration-200 text-sm border border-transparent hover:border-red-900/30"
+                >
+                    <span className="text-xl">🚪</span>
+                    {!collapsed && (
+                        <div className="text-left">
+                            <div className="font-bold text-sm tracking-wider">LOGOUT</div>
+                        </div>
+                    )}
+                </button>
 
                 {/* Collapse Toggle */}
                 <button
