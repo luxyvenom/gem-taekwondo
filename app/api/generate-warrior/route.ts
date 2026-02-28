@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
         if (uploadError) {
             console.error('Original upload error:', uploadError);
-            return NextResponse.json({ error: 'Failed to upload original image' }, { status: 500 });
+            return NextResponse.json({ error: 'Failed to upload original image', details: uploadError }, { status: 500 });
         }
 
         const { data: originalUrl } = supabase.storage
@@ -71,7 +71,7 @@ Keep the animal's signature colors and distinctive features prominent.`,
         ];
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash-preview-image-generation',
+            model: 'gemini-2.0-flash-exp-image-generation',
             contents: prompt,
             config: {
                 responseModalities: ['TEXT', 'IMAGE'],
@@ -112,7 +112,7 @@ Keep the animal's signature colors and distinctive features prominent.`,
 
         if (warriorUploadError) {
             console.error('Warrior upload error:', warriorUploadError);
-            return NextResponse.json({ error: 'Failed to upload warrior image' }, { status: 500 });
+            return NextResponse.json({ error: 'Failed to upload warrior image', details: warriorUploadError }, { status: 500 });
         }
 
         const { data: warriorUrl } = supabase.storage
