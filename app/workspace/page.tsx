@@ -97,7 +97,7 @@ export default function WorkspaceHome() {
             updatePipeline(pipeline.id, {
                 step: 'warrior_done',
                 originalUrl: data.originalUrl,
-                warriorUrl: data.warriorUrl,
+                warriorUrl: data.warriorBase64 || data.warriorUrl,
                 timestamp: data.timestamp,
             });
         } catch (err) {
