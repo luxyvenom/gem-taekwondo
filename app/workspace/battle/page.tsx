@@ -62,7 +62,7 @@ function PlayerModel({ action, onActionComplete }: { action: string, onActionCom
     }, [action, actions, onActionComplete]);
 
     return (
-        <group ref={group} position={[-1.5, -2, 0]} rotation={[0, Math.PI / 2, 0]} scale={1.8}>
+        <group ref={group} position={[-2, -3, 0]} rotation={[0, Math.PI / 2, 0]} scale={2.5}>
             <primitive object={scene} />
         </group>
     );
@@ -128,7 +128,7 @@ function BossModel({ action, onActionComplete }: { action: string, onActionCompl
     }, [action, actions, onActionComplete]);
 
     return (
-        <group ref={group} position={[1.5, -2, 0]} rotation={[0, -Math.PI / 2, 0]} scale={1.8}>
+        <group ref={group} position={[2, -3, 0]} rotation={[0, -Math.PI / 2, 0]} scale={2.5}>
             <primitive object={scene} />
         </group>
     );
@@ -235,8 +235,8 @@ export default function BattlePage() {
             </div>
 
             {/* ─── 3D Canvas ─── */}
-            <div className="flex-1 w-full bg-gradient-to-b from-gray-900 via-[#111] to-[#050505]">
-                <Canvas camera={{ position: [0, 1, 6], fov: 45 }}>
+            <div className="flex-1 w-full bg-gradient-to-b from-gray-900 via-[#111] to-[#050505] relative cursor-default">
+                <Canvas camera={{ position: [0, 2, 8], fov: 50 }}>
                     <ambientLight intensity={0.5} />
                     <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
                     <directionalLight position={[-5, 5, -5]} intensity={1} color="#4338ca" />
@@ -247,18 +247,18 @@ export default function BattlePage() {
                         <BossModel action={bossAction} onActionComplete={handleBossFinished} />
                     </React.Suspense>
 
-                    <ContactShadows position={[0, -2, 0]} opacity={0.6} scale={15} blur={1.5} far={4} />
+                    <ContactShadows position={[0, -3, 0]} opacity={0.6} scale={20} blur={2} far={4} />
                     <OrbitControls
                         enablePan={false}
-                        enableZoom={true}
-                        maxPolarAngle={Math.PI / 2 + 0.1}
+                        enableZoom={false}
+                        maxPolarAngle={Math.PI / 2}
                         minPolarAngle={Math.PI / 3}
                     />
                 </Canvas>
             </div>
 
             {/* ─── Controls & Logs ─── */}
-            <div className="h-48 bg-[#111] border-t-2 border-red-900/50 flex p-6 gap-6 relative z-10">
+            <div className="h-64 bg-[#111] border-t-2 border-red-900/50 flex flex-col p-6 gap-4 relative z-10 shrink-0">
                 {/* Battle Logs */}
                 <div className="flex-1 bg-black/50 rounded-xl border border-gray-800 p-4 font-mono text-sm overflow-hidden flex flex-col justify-end">
                     <AnimatePresence>
@@ -279,21 +279,21 @@ export default function BattlePage() {
                     </AnimatePresence>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-3 justify-center min-w-[200px]">
+                {/* Action Buttons - Horizontal Layout */}
+                <div className="flex gap-4 justify-center w-full max-w-4xl mx-auto h-20">
                     <button
                         onClick={() => doAttack('punch')}
                         disabled={playerAction !== 'idle' || bossHp <= 0}
-                        className="w-full py-4 px-6 bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-black italic rounded-xl transition-all shadow-[0_0_15px_rgba(79,70,229,0.5)] hover:shadow-[0_0_25px_rgba(79,70,229,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0"
+                        className="flex-1 max-w-[300px] h-full bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-black text-2xl italic rounded-xl transition-all shadow-[0_0_15px_rgba(79,70,229,0.5)] hover:shadow-[0_0_25px_rgba(79,70,229,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
                     >
-                        👊 LIGHT PUNCH
+                        <span>👊</span> LIGHT PUNCH
                     </button>
                     <button
                         onClick={() => doAttack('kick')}
                         disabled={playerAction !== 'idle' || bossHp <= 0}
-                        className="w-full py-4 px-6 bg-gradient-to-r from-red-700 to-orange-600 hover:from-red-600 hover:to-orange-500 text-white font-black italic rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] hover:shadow-[0_0_25px_rgba(220,38,38,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0"
+                        className="flex-1 max-w-[300px] h-full bg-gradient-to-r from-red-700 to-orange-600 hover:from-red-600 hover:to-orange-500 text-white font-black text-2xl italic rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] hover:shadow-[0_0_25px_rgba(220,38,38,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
                     >
-                        🦶 HEAVY KICK
+                        <span>🦶</span> HEAVY KICK
                     </button>
                 </div>
             </div>
