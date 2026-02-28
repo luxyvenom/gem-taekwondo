@@ -22,12 +22,7 @@ interface Fighter {
 }
 
 const mockFighters: Fighter[] = [
-  { id: '1', name: 'Frog Master', animal: 'Frog', emoji: '🐸', tier: 'S', level: 15, hp: 120, attack: 85, defense: 60, speed: 90, wins: 12, losses: 2 },
-  { id: '2', name: 'Tiger Claw', animal: 'Tiger', emoji: '🐯', tier: 'A', level: 10, hp: 150, attack: 95, defense: 70, speed: 65, wins: 8, losses: 4 },
-  { id: '3', name: 'Eagle Strike', animal: 'Eagle', emoji: '🦅', tier: 'A', level: 8, hp: 90, attack: 80, defense: 45, speed: 95, wins: 6, losses: 3 },
-  { id: '4', name: 'Bear Force', animal: 'Bear', emoji: '🐻', tier: 'B', level: 5, hp: 200, attack: 90, defense: 85, speed: 30, wins: 3, losses: 5 },
-  { id: '5', name: 'Snake Venom', animal: 'Snake', emoji: '🐍', tier: 'B', level: 7, hp: 80, attack: 75, defense: 40, speed: 88, wins: 5, losses: 6 },
-  { id: '6', name: 'Wolf Pack', animal: 'Wolf', emoji: '🐺', tier: 'C', level: 3, hp: 110, attack: 70, defense: 55, speed: 75, wins: 2, losses: 7 },
+  { id: '1', name: 'My Fighter', animal: 'Warrior', emoji: '🥋', tier: 'S', level: 1, hp: 100, attack: 25, defense: 15, speed: 10, wins: 0, losses: 0 },
 ];
 
 const tierColors: Record<string, string> = {
