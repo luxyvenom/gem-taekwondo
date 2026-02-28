@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment, useGLTF, useFBX, useAnimations, ContactShadows } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface Fighter {
   id: string;
@@ -41,10 +44,56 @@ const tierBorder: Record<string, string> = {
   C: 'border-gray-600/50 shadow-gray-500/20',
 };
 
+// ─── 3D Character Viewer Component ─────────────────────────────────────
+function CharacterModel({ action }: { action: string }) {
+  const group = useRef<THREE.Group>(null);
+  const { scene } = useGLTF('/my/my.glb'); // Using a placeholder user character
+
+  const idleFbx = useFBX('/animations/Ready Idle.fbx');
+  const punchFbx = useFBX('/animations/Hook Punch.fbx');
+  const kickFbx = useFBX('/animations/sideKick.fbx');
+
+  const [animations] = useState(() => [
+    Object.assign(idleFbx.animations[0].clone(), { name: 'idle' }),
+    Object.assign(punchFbx.animations[0].clone(), { name: 'punch' }),
+    Object.assign(kickFbx.animations[0].clone(), { name: 'kick' }),
+  ]);
+
+  const { actions } = useAnimations(animations, group);
+
+  useEffect(() => {
+    if (!actions || !actions[action]) return;
+    const currentAction = actions[action];
+
+    currentAction.reset().fadeIn(0.2).play();
+
+    if (action !== 'idle') {
+      currentAction.setLoop(THREE.LoopOnce, 1);
+      currentAction.clampWhenFinished = true;
+    }
+
+    return () => {
+      currentAction.fadeOut(0.2);
+    };
+  }, [action, actions]);
+
+  return (
+    <group ref={group} position={[0, -1.8, 0]} scale={1.8}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+useGLTF.preload('/my/my.glb');
+useFBX.preload('/animations/Ready Idle.fbx');
+useFBX.preload('/animations/Hook Punch.fbx');
+useFBX.preload('/animations/sideKick.fbx');
+
 export default function CollectionPage() {
   const [fighters] = useState<Fighter[]>(mockFighters);
   const [selectedFighter, setSelectedFighter] = useState<Fighter | null>(null);
   const [filterTier, setFilterTier] = useState<string>('ALL');
+  const [currentAction, setCurrentAction] = useState('idle');
 
   const filteredFighters = filterTier === 'ALL'
     ? fighters
@@ -72,11 +121,10 @@ export default function CollectionPage() {
             <button
               key={tier}
               onClick={() => setFilterTier(tier)}
-              className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                filterTier === tier
+              className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${filterTier === tier
                   ? 'bg-red-600 text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}
+                }`}
             >
               {tier}
             </button>
@@ -168,17 +216,50 @@ export default function CollectionPage() {
               className={`bg-[#1a1a1a] border rounded-2xl max-w-md w-full overflow-hidden shadow-2xl ${tierBorder[selectedFighter.tier]}`}
             >
               {/* Modal Header */}
-              <div className="relative h-48 bg-gradient-to-br from-[#1a1a1a] to-[#222] flex items-center justify-center">
-                <span className="text-[100px]">{selectedFighter.emoji}</span>
-                <div className={`absolute top-4 left-4 px-4 py-1.5 rounded-lg font-black italic bg-gradient-to-r ${tierColors[selectedFighter.tier]} shadow-[3px_3px_0px_rgba(0,0,0,0.5)]`}>
+              <div className="relative h-72 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center overflow-hidden">
+                <Canvas camera={{ position: [0, 1, 5], fov: 45 }}>
+                  <ambientLight intensity={0.5} />
+                  <directionalLight position={[5, 10, 5]} intensity={2} />
+                  <Environment preset="city" />
+
+                  <React.Suspense fallback={null}>
+                    <CharacterModel action={currentAction} />
+                  </React.Suspense>
+
+                  <ContactShadows position={[0, -1.8, 0]} opacity={0.6} scale={15} blur={1.5} far={4} />
+                  <OrbitControls
+                    enablePan={false}
+                    enableZoom={true}
+                    maxPolarAngle={Math.PI / 2 + 0.1}
+                    minPolarAngle={Math.PI / 3}
+                  />
+                </Canvas>
+
+                <div className={`absolute top-4 left-4 px-4 py-1.5 rounded-lg font-black italic bg-gradient-to-r ${tierColors[selectedFighter.tier]} shadow-[3px_3px_0px_rgba(0,0,0,0.5)] z-10`}>
                   TIER {selectedFighter.tier}
                 </div>
                 <button
                   onClick={() => setSelectedFighter(null)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-red-600 rounded-xl flex items-center justify-center transition-colors text-lg"
+                  className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-red-600 rounded-xl flex items-center justify-center transition-colors text-lg z-10"
                 >
                   ✕
                 </button>
+
+                {/* 3D Actions */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                  <button
+                    onClick={() => { setCurrentAction('punch'); setTimeout(() => setCurrentAction('idle'), 1200) }}
+                    className="px-4 py-2 bg-blue-600/80 hover:bg-blue-500 backdrop-blur text-white text-xs font-bold rounded-lg transition-all"
+                  >
+                    👊 PUNCH
+                  </button>
+                  <button
+                    onClick={() => { setCurrentAction('kick'); setTimeout(() => setCurrentAction('idle'), 1500) }}
+                    className="px-4 py-2 bg-red-600/80 hover:bg-red-500 backdrop-blur text-white text-xs font-bold rounded-lg transition-all"
+                  >
+                    🦶 KICK
+                  </button>
+                </div>
               </div>
 
               <div className="p-6">
